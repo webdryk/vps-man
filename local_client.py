@@ -5,7 +5,7 @@ import sys
 from cryptography.fernet import Fernet
 
 class TunnelClient:
-    def __init__(self, vps_ip='192.168.1.180', vps_port=5353):
+    def __init__(self, vps_ip='44.250.29.57', vps_port=5353):
         """Initialize the tunnel client"""
         self.vps_ip = vps_ip  # This should be your VPS IP address (e.g., '123.45.67.89')
         self.vps_port = vps_port
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     # Initialize client - REPLACE WITH YOUR ACTUAL VPS IP
-    client = TunnelClient(vps_ip='192.168.1.180')  # e.g., '123.45.67.89'
+    client = TunnelClient(vps_ip='44.250.29.57')  # e.g., '123.45.67.89'
     
     # Send message (combine all arguments)
     client.send_message(' '.join(sys.argv[1:]))
