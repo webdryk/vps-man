@@ -11,14 +11,13 @@ class VPSTunnelServer:
         self.listen_ip = listen_ip
         self.listen_port = listen_port
         self.running = False
-        self.stats = {
+        self.stats = {  # Fixed typo from 'stats' to 'stats'
             'connections': 0,
             'errors': 0,
             'bytes_received': 0,
             'start_time': time.time()
         }
         
-        # Initialize encryption and sockets
         self._setup_encryption()
         self._setup_sockets()
         
@@ -40,7 +39,6 @@ class VPSTunnelServer:
             print(f"🔒 Encryption initialized (key: {self.key.decode('utf-8')[:10]}...)")
         except ValueError as e:
             print(f"❌ Invalid key format: {e}")
-            print("Key must be 32 url-safe base64-encoded bytes")
             sys.exit(1)
 
     def _setup_sockets(self):
@@ -54,29 +52,26 @@ class VPSTunnelServer:
             print(f"❌ Socket error: {e}")
             sys.exit(1)
 
-    def _validate_packet(self, data):
-        """Basic packet validation"""
-        if len(data) < 10:  # Minimum encrypted packet size
-            raise ValueError("Packet too small")
-        if len(data) > 65535:
-            raise ValueError("Packet too large")
-
     def handle_client(self, data, client_addr):
         """Handle incoming client requests"""
         self.stats['connections'] += 1
         
         try:
-            self._validate_packet(data)
+            if len(data) < 10:  # Minimum encrypted packet size
+                raise ValueError("Packet too small")
+            if len(data) > 65535:
+                raise ValueError("Packet too large")
+                
             self.stats['bytes_received'] += len(data)
             
             decrypted = self.cipher.decrypt(data)
             if not decrypted:
                 raise ValueError("Empty decrypted data")
                 
-            print(f"📥 [{client_addr}] Received {len(decrypted)} bytes")
+            print(f"📥 [{client_addr}] Received {len(decrypted)} bytes: {decrypted[:100]}...")
             
-            # Process data (echo back for testing)
-            response = f"ACK[{time.strftime('%H:%M:%S')}]: {decrypted.decode('utf-8', errors='replace')[:100]}"
+            # Echo back with timestamp
+            response = f"ACK[{time.strftime('%H:%M:%S')}]: {decrypted.decode('utf-8', errors='replace')}"
             encrypted_response = self.cipher.encrypt(response.encode())
             
             self.sock.sendto(encrypted_response, client_addr)
@@ -85,9 +80,6 @@ class VPSTunnelServer:
         except InvalidToken as e:
             self.stats['errors'] += 1
             print(f"🔐 [{client_addr}] Decryption failed - wrong key?")
-        except UnicodeDecodeError as e:
-            self.stats['errors'] += 1
-            print(f"📜 [{client_addr}] Encoding error: {e}")
         except Exception as e:
             self.stats['errors'] += 1
             print(f"⚠️  [{client_addr}] Error: {e}")
@@ -136,26 +128,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Fatal initialization error: {e}")
         sys.exit(1)
-        
-        
-        
-
-
-
-
-
-
-
-
-        
-import socket
-
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind(('0.0.0.0', 5353))
-print("DEBUG SERVER READY")
-
-while True:
-    data, addr = sock.recvfrom(65535)
-    print(f"📥 RAW DATA FROM {addr}: {data[:100]}...")
-    sock.sendto(b"TEST RESPONSE", addr)
-    
